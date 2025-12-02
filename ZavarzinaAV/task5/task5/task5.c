@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include"Console.h"
 #include <io.h>
 #include <memory.h>
 #include<time.h>
 #include<omp.h>
 #include<locale.h>
 
-void BubbleSort1(struct _finddata_t* a, size_t size) { //макс элемент погружается
+void BubbleSort(struct _finddata_t* a, size_t size) { 
 	long i, j;
 	struct _finddata_t temp;
 	for (i = 0; i < size-1; i++) {
@@ -21,21 +20,6 @@ void BubbleSort1(struct _finddata_t* a, size_t size) { //макс элемент погружаетс
 	}
 
 }
-
-//void BubbleSort2(struct _finddata_t* a, size_t size) {  
-//	long i, j;
-//	struct _finddata_t temp;
-//	for (i = 0; i < size; i++) {
-//		for (j = size-1; j < size; j--) {
-//			if (a[j-1].size > a[j].size) {
-//				temp = a[j-1];
-//				a[j-1] = a[j];
-//				a[j] = temp;
-//			}
-//		}
-//	}
-//
-//}
 
 void SelectSort(struct _finddata_t* a, size_t size) {
 	long i, j, idx;
@@ -99,6 +83,20 @@ void MergeSort(struct _finddata_t* a, long l, long r) {
 	}
 }
 
+void SimpleSort(struct _finddata_t* a, size_t size) {
+	int i, j;
+	struct _finddata_t temp;
+	for (i = 0; i < size; i++) {
+		for (j = i + 1; j < size; j++) {
+			if (a[i].size > a[j].size) {
+				temp = a[i];
+				a[i] = a[j];
+				a[j] = temp;
+			}
+		}
+	}
+}
+
 void print_file(struct _finddata_t c_file) {
 	char buffer[32];
 	ctime_s(buffer, _countof(buffer), &c_file.time_write);
@@ -109,6 +107,110 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 	char search[_MAX_PATH + 4 + 1];
 	strcpy_s(search, sizeof(search), path);
 	strcat_s(search, sizeof(search), "\\*.*");
-	search[_MAX_PATH + 4] = '\0' ;
+	search[_MAX_PATH + 4] = '\0';
 
+	intptr_t hFile;
+	struct _finddata_t c_file;
+	if ((hFile = _findfirst(search, &c_file)) == -1L) {
+
+		printf("нет файлов в каталоге");
+		return;
+	}
+
+	size_t count = 0;
+	do {
+		count++;
+	} while (_findnext(hFile, &c_file) == 0);
+	_findclose(hFile);
+
+	struct _finddata_t* arr = malloc(count * sizeof(struct _finddata_t));
+
+	hFile = _findfirst(hFile, &c_file);
+	arr[0] = c_file;
+	for (size_t i = 1; i < count; i++) {
+		_findnext(hFile, &c_file);
+		arr[i] = c_file;
+	}
+	_findclose(hFile);
+
+	double start_time = omp_get_wtime();
+	
+	switch (sort_method) {
+	case 1:
+		BubbleSort(arr, count);
+		break;
+	case 2:
+		SelectSort(arr, count);
+		break;
+	case 3:
+		InsertSort(arr, count);
+		break;
+	case 4:
+		MergeSort(arr, 0, count, -1);
+		break;
+	case 5:
+		SimpleSort(arr, count);
+		break;
+	default:
+		printf("Неизвестная сортировка");
+		free(arr);
+		return;
+	}
+
+	double end_time = omp_get_wtime();
+
+	printf("Текущая директория: %s\n", path);
+	printf("%-30.30s %-25s %-10s", "file", "data", "size");
+
+	if (sort_direction == 1) {
+		for (size_t i = 0; i < count; i++) {
+			print_file(arr[i]);
+		}
+	}
+	else {
+		for (size_t i = count; i-- > 0; ) {
+			print_file(arr[i]);
+		}
+	}
+	printf("Время сортировки: %lf сек\n", end_time - start_time);
+	free(arr);
 }
+
+int main() {
+	setlocale(LC_ALL, "Russian");
+
+	/*int last_sort_id = -1;
+	int last_sort_order = -1;
+	char last_path[_MAX_PATH + 1] = "#";*/
+
+	int sort_id;
+	int sort_order;
+	char path[_MAX_PATH + 1];
+
+	clrscr();
+
+	while (1) {
+		printf("Введите путь: \n");
+		get_s(path, sizeof(path));
+
+		printf("Список алгоритмов сортировки: \n");
+		printf("1 - пузырьком\n");
+		printf("2 - выюором\n");
+		printf("3 - вставками\n");
+		printf("4 - слиянием\n");
+		printf("5 - простая\n");
+		printf("выберите метод сортировки: \n");
+		scanf_s("%d", &sort_id);
+
+		printf("Список методов сортировки: \n");
+		printf("1 - по возрастанию\n");
+		printf("2 - по убыванию\n");
+		printf("Выберете метод сортировки: \n");
+		scanf_s("%d", &sort_order);
+
+		list_dir(sort_id, sort_order, path);
+		getchar();
+	}
+	return 0;
+}
+
