@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <io.h>
@@ -107,13 +108,12 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 	char search[_MAX_PATH + 4 + 1];
 	strcpy_s(search, sizeof(search), path);
 	strcat_s(search, sizeof(search), "\\*.*");
-	search[_MAX_PATH + 4] = '\0';
 
 	intptr_t hFile;
 	struct _finddata_t c_file;
 	if ((hFile = _findfirst(search, &c_file)) == -1L) {
 
-		printf("нет файлов в каталоге");
+		printf("нет файлов в каталоге\n");
 		return;
 	}
 
@@ -125,7 +125,7 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 
 	struct _finddata_t* arr = malloc(count * sizeof(struct _finddata_t));
 
-	hFile = _findfirst(hFile, &c_file);
+	hFile = _findfirst(search, &c_file);
 	arr[0] = c_file;
 	for (size_t i = 1; i < count; i++) {
 		_findnext(hFile, &c_file);
@@ -146,18 +146,23 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 		InsertSort(arr, count);
 		break;
 	case 4:
-		MergeSort(arr, 0, count, -1);
+		MergeSort(arr, 0, count-1);
 		break;
 	case 5:
 		SimpleSort(arr, count);
 		break;
 	default:
-		printf("Неизвестная сортировка");
+		printf("Неизвестная сортировка\n");
 		free(arr);
 		return;
 	}
 
 	double end_time = omp_get_wtime();
+
+	if (sort_direction != 1 && sort_direction != 2) {
+		printf("неизвестное направление сортировки\n");
+		return;
+	}
 
 	printf("Текущая директория: %s\n", path);
 	printf("%-30.30s %-25s %-10s", "file", "data", "size");
@@ -179,23 +184,29 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 int main() {
 	setlocale(LC_ALL, "Russian");
 
-	/*int last_sort_id = -1;
+	int last_sort_id = -1;
 	int last_sort_order = -1;
-	char last_path[_MAX_PATH + 1] = "#";*/
+	char last_path[_MAX_PATH + 1] = "#";
 
 	int sort_id;
 	int sort_order;
 	char path[_MAX_PATH + 1];
+	char c;
 
-	clrscr();
+	system("cls");
 
 	while (1) {
 		printf("Введите путь: \n");
-		get_s(path, sizeof(path));
+		gets_s(path, sizeof(path));
 
 		printf("Список алгоритмов сортировки: \n");
+
+		if (last_sort_id != -1) {
+			printf("нажмите 0 для выбора последнего вашего алгоритма\n");
+		}
+
 		printf("1 - пузырьком\n");
-		printf("2 - выюором\n");
+		printf("2 - выбором\n");
 		printf("3 - вставками\n");
 		printf("4 - слиянием\n");
 		printf("5 - простая\n");
@@ -208,7 +219,38 @@ int main() {
 		printf("Выберете метод сортировки: \n");
 		scanf_s("%d", &sort_order);
 
-		list_dir(sort_id, sort_order, path);
+		if (sort_id == 0) {
+			if (last_sort_id == -1) {
+				printf("выберете начальный алгоритм сортировки\n");
+				continue;
+			}
+			sort_id = last_sort_id;
+		}
+
+		if (sort_order == 0) {
+			if (last_sort_order == -1) {
+				printf("выберете начальный метод сортировки\n");
+				continue;
+			}
+			sort_order = last_sort_order;
+		}
+
+		if (strlen(path) == 0) {
+			if (last_path[0] == '#') {
+				printf("выберете начальный каталог для сортировки\n");
+				continue;
+			}
+		}
+
+		else {
+			strcpy_s(last_path, sizeof(last_path), path);
+		}
+
+		last_sort_id = sort_id;
+		last_sort_order = sort_order;
+
+		system("cls");
+		list_dir(last_sort_id, last_sort_order, last_path);
 		getchar();
 	}
 	return 0;
