@@ -165,7 +165,7 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 	}
 
 	printf("Текущая директория: %s\n", path);
-	printf("%-30.30s %-25s %-10s", "file", "data", "size");
+	printf("%-30.30s %-25s %10s\n", "file", "data", "size");
 
 	if (sort_direction == 1) {
 		for (size_t i = 0; i < count; i++) {
@@ -181,7 +181,9 @@ void list_dir(int sort_method, int sort_direction, char* path) {
 	free(arr);
 }
 
-int main() {
+
+int main(){
+
 	setlocale(LC_ALL, "Russian");
 
 	int last_sort_id = -1;
@@ -191,58 +193,66 @@ int main() {
 	int sort_id;
 	int sort_order;
 	char path[_MAX_PATH + 1];
-	char c;
+
 
 	system("cls");
-
-	while (1) {
-		printf("Введите путь: \n");
+	while (1)
+	{
+		printf("Введите путь (если вы уже выбирали путь и желаете остаться в этом каталоге, нажмите Enter): ");
 		gets_s(path, sizeof(path));
 
-		printf("Список алгоритмов сортировки: \n");
-
-		if (last_sort_id != -1) {
-			printf("нажмите 0 для выбора последнего вашего алгоритма\n");
+		printf("Список алгоритмов сортировки:\n");
+		if (last_sort_id != -1)
+		{
+			printf(" 0 - Последний выбранный алгоритм\n");
 		}
-
-		printf("1 - пузырьком\n");
-		printf("2 - выбором\n");
-		printf("3 - вставками\n");
-		printf("4 - слиянием\n");
-		printf("5 - простая\n");
-		printf("выберите метод сортировки: \n");
+		printf(" 1 - Пузырьком\n");
+		printf(" 2 - Выбором\n");
+		printf(" 3 - Вставками\n");
+		printf(" 4 - Слиянием\n");
+		printf(" 5 - Простой\n");
+	
+		printf("Выберите алгоритм сортировки: \n");
 		scanf_s("%d", &sort_id);
 
 		printf("Список методов сортировки: \n");
-		printf("1 - по возрастанию\n");
-		printf("2 - по убыванию\n");
-		printf("Выберете метод сортировки: \n");
+		if (last_sort_order != -1)
+		{
+			printf(" 0 - Последний выбранный метод\n");
+		}
+		printf(" 1 - По возрастанию\n");
+		printf(" 2 - По убыванию\n");
+		printf("Выберите метод сортировки: ");
 		scanf_s("%d", &sort_order);
 
-		if (sort_id == 0) {
-			if (last_sort_id == -1) {
-				printf("выберете начальный алгоритм сортировки\n");
+		if (sort_id == 0)
+		{
+			if (last_sort_id == -1)
+			{
+				printf("Пожалуйста, выберите начальный алгоритм сортировки\n");
 				continue;
 			}
 			sort_id = last_sort_id;
 		}
-
-		if (sort_order == 0) {
-			if (last_sort_order == -1) {
-				printf("выберете начальный метод сортировки\n");
+		if (sort_order == 0)
+		{
+			if (last_sort_order == -1)
+			{
+				printf("Пожалуйста, выберите начальный метод сортировки\n");
 				continue;
 			}
 			sort_order = last_sort_order;
 		}
-
-		if (strlen(path) == 0) {
-			if (last_path[0] == '#') {
-				printf("выберете начальный каталог для сортировки\n");
+		if (strlen(path) == 0)
+		{
+			if (last_path[0] == '#')
+			{
+				printf("Пожалуйста, выберите начальный каталог для сортировки\n");
 				continue;
 			}
 		}
-
-		else {
+		else
+		{
 			strcpy_s(last_path, sizeof(last_path), path);
 		}
 
@@ -255,4 +265,3 @@ int main() {
 	}
 	return 0;
 }
-
